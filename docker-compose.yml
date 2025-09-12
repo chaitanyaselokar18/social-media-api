@@ -1,0 +1,32 @@
+
+services:
+  db:
+    image: postgres:17
+    container_name: social_media_db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: chaitya
+      POSTGRES_DB: social_media_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  app:
+    build: .
+    container_name: social_media_app
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: postgres://postgres:chaitya@db:5432/social_media_db?schema=public
+      JWT_SECRET: supersecretkey
+    depends_on:
+      - db
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+
+volumes:
+  pgdata:

@@ -1,0 +1,7 @@
+
+services:
+  app:
+    command: npm run start:dev
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
