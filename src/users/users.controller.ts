@@ -18,8 +18,9 @@ export class UsersController {
   async getAllUsers(
   @Query('page') page = 1,
   @Query('limit') limit = 5,
+  @Query('include') includeParam?: string|undefined
 ) {
-  const { data, total, totalPages } = await this.usersService.getAllUsers(+page, +limit);
+  const { data, total, totalPages } = await this.usersService.getAllUsers(+page, +limit,includeParam);
 
   return {
     message: 'Users retrieved successfully',

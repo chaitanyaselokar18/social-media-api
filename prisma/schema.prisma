@@ -20,6 +20,7 @@ model User {
   password  String                                 // Hashed password
   role      Role     @default(USER)                 // Role: USER or SUPERADMIN
   posts     Post[]                                 // 1-to-Many (User -> Posts)
+  blog      Blog[]                                 // 1-to-Many (User -> Blog)
   createdAt DateTime @default(now())               // Timestamp
 }
 
@@ -31,6 +32,16 @@ model Post {
   author    User     @relation(fields: [authorId], references: [id]) // Foreign Key
   createdAt DateTime @default(now())          // Timestamp
   updatedAt DateTime @updatedAt              // Timestamp
+}
+
+model Blog{
+  id           Int @id @default(autoincrement())
+  title        String
+  description  String
+  authorId     Int
+  author       User     @relation(fields: [authorId], references: [id]) // Foreign Key
+  createdAt    DateTime @default(now())          // Timestamp
+  updatedAt    DateTime @updatedAt              // Timestamp
 }
 
 enum Role {

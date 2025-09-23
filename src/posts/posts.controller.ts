@@ -24,7 +24,6 @@ export class PostsController {
     @CurrentUser() user: { id: number; role: Role }
   ) {
     
-
     const post = await this.postsService.createPost(user, dto);
     return {
       message: 'Post created successfully',

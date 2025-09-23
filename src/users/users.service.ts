@@ -7,19 +7,39 @@ export class UsersService {
   constructor(private prisma: PrismaService) {}
 
   //get All User (pagenation)
-  async getAllUsers(page: number = 1, limit: number = 10) {
+  async getAllUsers(  page: number = 1, limit: number = 10,includeParam?:string) {
+   
   if (page < 1) page = 1;
   if (limit < 1) limit = 10;
-
+  
   const skip = (page - 1) * limit;
-
-  const [data, total] = await this.prisma.$transaction([
+  
+  //  dynamically
+  const includeObj: Record<string, true> = {};
+  if (includeParam) {
+    includeParam.split(',').forEach((relation) => {
+      if (['posts', 'blog'].includes(relation)) {
+        includeObj[relation] = true;
+      }
+    });
+  }
+  
+  //const includeParam= req.query.include as string 
+  const [data,total] = await this.prisma.$transaction([
     this.prisma.user.findMany({
+      
       skip,
       take: limit,
-      select: { id: true, email: true, role: true, createdAt: true },
-      orderBy: { createdAt: 'desc' },
+      include: Object.keys(includeObj).length?includeObj:undefined,
+
+      // include:{posts:true,
+      //   blog:true
+      // },
+      //select: { id: true, email: true, role: true, createdAt: true },
+      //orderBy: { createdAt: 'desc' },
+   
     }),
+   
     this.prisma.user.count(),
   ]);
 
