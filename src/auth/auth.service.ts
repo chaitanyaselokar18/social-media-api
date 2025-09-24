@@ -2,6 +2,8 @@ import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
+import { UserEntity } from 'src/users/entities/user.entity';
+
 
 @Injectable()
 export class AuthService {
@@ -14,11 +16,12 @@ export class AuthService {
 
     const hashed = await bcrypt.hash(password, 10);
 
-    const user = await this.prisma.user.create({
+    const user =new UserEntity( await this.prisma.user.create({
       data: { email, password: hashed },
-    });
+    }));
 
-    return { message: 'User created successfully.', user };
+
+    return { message: 'User created successfully.', user};
   }
 
   //logIn

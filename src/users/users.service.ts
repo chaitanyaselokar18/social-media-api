@@ -1,20 +1,32 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { Role } from '@prisma/client';
+import { Prisma, Role } from '@prisma/client';
+import { USER_INC } from 'src/common/enum/user-include-enum';
 
 @Injectable()
 export class UsersService {
   constructor(private prisma: PrismaService) {}
 
+  //include=pots,blog
+  private includeKey(includeArr: USER_INC[]): Prisma.UserInclude{
+    return{
+      posts: includeArr.includes(USER_INC.posts),
+      blog: includeArr.includes(USER_INC.blog),
+    }
+  }
+
   //get All User (pagenation)
-  async getAllUsers(  page: number = 1, limit: number = 10,includeParam?:string) {
+  async getAllUsers(  page: number = 1, limit: number = 10,includeParam) {
    
   if (page < 1) page = 1;
   if (limit < 1) limit = 10;
   
   const skip = (page - 1) * limit;
   
-  //  dynamically
+  
+  
+
+  //  include=post,blog
   const includeObj: Record<string, true> = {};
   if (includeParam) {
     includeParam.split(',').forEach((relation) => {
@@ -31,7 +43,7 @@ export class UsersService {
       skip,
       take: limit,
       include: Object.keys(includeObj).length?includeObj:undefined,
-
+      //manual include
       // include:{posts:true,
       //   blog:true
       // },

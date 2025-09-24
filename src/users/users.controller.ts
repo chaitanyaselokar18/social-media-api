@@ -6,7 +6,11 @@ import { RolesGuard } from '../common/guards/roles.guard';
 import { Role } from '@prisma/client';
 import { UpdateUserRoleDto } from './dto/update-user-role.dto';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
+import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiPropertyOptional, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { UserEntity } from './entities/user.entity';
 
+@ApiTags('users')//optional
+@ApiBearerAuth('access-token')
 @Controller('users')
 @UseGuards(JwtAuthGuard, RolesGuard)
 export class UsersController {
@@ -14,17 +18,22 @@ export class UsersController {
 
   // Superadmin: Get all users
   @Get()
+  @ApiQuery({name:'page',required:false,type:Number,description:"Enter page number",example:"1"})
+  @ApiQuery({name:'include',required:false,type:String,description:"Enter page names (posts or blog)",example:"posts"})
+  @ApiOperation({ summary: 'Get all users' })
+  @ApiOkResponse({type:()=>UserEntity})
+  // @ApiResponse({ status: 200, description: 'List of users returned successfully.' })
   @Roles(Role.SUPERADMIN)
   async getAllUsers(
   @Query('page') page = 1,
   @Query('limit') limit = 5,
   @Query('include') includeParam?: string|undefined
-) {
+  ) {
   const { data, total, totalPages } = await this.usersService.getAllUsers(+page, +limit,includeParam);
 
   return {
     message: 'Users retrieved successfully',
-    data,
+    data:data.map((data) => new UserEntity(data)),
     pagination: {
       page: +page,
       limit: +limit,
@@ -36,25 +45,29 @@ export class UsersController {
 
   // Superadmin: Delete any user
   @Delete(':id')
+  @ApiOperation({ summary: 'SUPERADMIN only delete user by id' })
+  @ApiOkResponse({type:()=>UserEntity})
   @Roles(Role.SUPERADMIN)
   async deleteUser(@Param('id', ParseIntPipe) id: number, @CurrentUser() user) {
-    const deletedUser = await this.usersService.deleteUser(id);
+    const deletedUser= new UserEntity( await this.usersService.deleteUser(id));
     return {
       message: `User with ID ${id} deleted successfully`,
-      data: deletedUser,
+      data:deletedUser,
       statusCode: 200,
     };
   }
 
   // Superadmin: Promote/Demote user role
   @Patch(':id/role')
+  @ApiOperation({ summary: 'SUPERADMIN only change role' })
   @Roles(Role.SUPERADMIN)
+  @ApiOkResponse({type:()=> UserEntity})
   async updateUserRole(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateUserRoleDto,
     @CurrentUser() user
   ) {
-    const updatedUser = await this.usersService.updateUserRole(id, dto.role);
+    const updatedUser =new UserEntity( await this.usersService.updateUserRole(id, dto.role));
     return {
       message:
         dto.role === Role.SUPERADMIN

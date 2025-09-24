@@ -9,7 +9,11 @@ import { Roles } from '../common/decorators/roles.decorator';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Role } from '@prisma/client';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
+import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiQuery } from '@nestjs/swagger';
+import { PostEntity } from './entities/post.entity';
 
+
+@ApiBearerAuth('access-token')
 @Controller('posts')
 @UseGuards(JwtAuthGuard, RolesGuard) // JWT + Role guard applied globally
 export class PostsController {
@@ -17,6 +21,8 @@ export class PostsController {
 
   // Create Post (any authenticated user)
   @Post()
+  @ApiOperation({ summary: 'create post' })
+  @ApiOkResponse({type:()=>PostEntity})
   @Roles(Role.USER, Role.SUPERADMIN)
   @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
   async createPost(
@@ -34,6 +40,9 @@ export class PostsController {
 
   // Get all posts (authentication required)
   @Get()
+  @ApiQuery({name:'page',required:false,type:Number,description:"Enter page number",example:"1"})
+  @ApiOperation({ summary: 'Get all Posts' })
+  @ApiOkResponse({type:()=>PostEntity})
   async getAllPosts(
   @Query('page') page = 1,
   @Query('limit') limit = 5,
@@ -54,6 +63,8 @@ export class PostsController {
 
   // Get post by ID (authentication required)
   @Get(':id')
+  @ApiOperation({ summary: 'get post by id' })
+  @ApiOkResponse({type:()=>PostEntity})
   async getPostById(@Param('id', ParseIntPipe) id: number) {
     const post = await this.postsService.getPostById(id);
     return {
@@ -65,6 +76,8 @@ export class PostsController {
 
   // Update post (only owner or superadmin)
   @Put(':id')
+  @ApiOperation({ summary: 'SUPERADMIN or owner only update post' })
+  @ApiOkResponse({type:()=>PostEntity})
   @Roles(Role.USER, Role.SUPERADMIN)
   @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
   async updatePost(
@@ -84,6 +97,8 @@ export class PostsController {
 
   // Delete post (only owner or superadmin)
   @Delete(':id')
+  @ApiOperation({ summary: 'SUPERADMIN or owner only delete post' })
+  @ApiOkResponse({type:()=>PostEntity})
   @Roles(Role.USER, Role.SUPERADMIN)
   async deletePost(
     @Param('id', ParseIntPipe) id: number,
