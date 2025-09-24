@@ -1,15 +1,33 @@
-import { Controller, Get, Delete, Patch, Param, ParseIntPipe, Body, UseGuards, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Delete,
+  Patch,
+  Param,
+  ParseIntPipe,
+  Body,
+  UseGuards,
+  Query,
+  ParseArrayPipe,
+} from '@nestjs/common';
 import { UsersService } from './users.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Role } from '@prisma/client';
 import { UpdateUserRoleDto } from './dto/update-user-role.dto';
-import { CurrentUser } from '../common/decorators/current-user.decorator';
-import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiPropertyOptional, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { UserEntity } from './entities/user.entity';
+// import { CurrentUser } from '../common/decorators/current-user.decorator';
+import {
+  ApiBearerAuth,
+  ApiOkResponse,
+  ApiOperation,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
+import { USER_INC } from 'src/common/enum/user-include-enum';
+import { UserEntity } from './entities/user.Entity';
 
-@ApiTags('users')//optional
+@ApiTags('users') //optional
 @ApiBearerAuth('access-token')
 @Controller('users')
 @UseGuards(JwtAuthGuard, RolesGuard)
@@ -18,41 +36,59 @@ export class UsersController {
 
   // Superadmin: Get all users
   @Get()
-  @ApiQuery({name:'page',required:false,type:Number,description:"Enter page number",example:"1"})
-  @ApiQuery({name:'include',required:false,type:String,description:"Enter page names (posts or blog)",example:"posts"})
+  @ApiQuery({
+    name: 'page',
+    required: false,
+    type: Number,
+    description: 'Enter page number',
+    example: '1',
+  })
+  @ApiQuery({
+    name: 'include',
+    required: false,
+    type: String,
+    description: 'Enter page names (posts or blog)',
+    example: 'posts',
+    enum: USER_INC,
+  })
   @ApiOperation({ summary: 'Get all users' })
-  @ApiOkResponse({type:()=>UserEntity})
+  @ApiOkResponse({ type: () => UserEntity, isArray: true })
   // @ApiResponse({ status: 200, description: 'List of users returned successfully.' })
   @Roles(Role.SUPERADMIN)
   async getAllUsers(
-  @Query('page') page = 1,
-  @Query('limit') limit = 5,
-  @Query('include') includeParam?: string|undefined
+    @Query('page') page = 1,
+    @Query('limit') limit = 5,
+    @Query('include', new ParseArrayPipe({ optional: true }))
+    includeParam?: USER_INC[],
   ) {
-  const { data, total, totalPages } = await this.usersService.getAllUsers(+page, +limit,includeParam);
+    const { data, total, totalPages } = await this.usersService.getAllUsers(
+      page,
+      limit,
+      includeParam,
+    );
 
-  return {
-    message: 'Users retrieved successfully',
-    data:data.map((data) => new UserEntity(data)),
-    pagination: {
-      page: +page,
-      limit: +limit,
-      total,
-      totalPages,
-    },
-  };
+    return {
+      message: 'Users retrieved successfully',
+      data: data.map((data) => new UserEntity(data)),
+      pagination: {
+        page: +page,
+        limit: +limit,
+        total,
+        totalPages,
+      },
+    };
   }
 
   // Superadmin: Delete any user
   @Delete(':id')
   @ApiOperation({ summary: 'SUPERADMIN only delete user by id' })
-  @ApiOkResponse({type:()=>UserEntity})
+  @ApiOkResponse({ type: () => UserEntity })
   @Roles(Role.SUPERADMIN)
-  async deleteUser(@Param('id', ParseIntPipe) id: number, @CurrentUser() user) {
-    const deletedUser= new UserEntity( await this.usersService.deleteUser(id));
+  async deleteUser(@Param('id', ParseIntPipe) id: number) {
+    const deletedUser = new UserEntity(await this.usersService.deleteUser(id));
     return {
       message: `User with ID ${id} deleted successfully`,
-      data:deletedUser,
+      data: deletedUser,
       statusCode: 200,
     };
   }
@@ -61,13 +97,14 @@ export class UsersController {
   @Patch(':id/role')
   @ApiOperation({ summary: 'SUPERADMIN only change role' })
   @Roles(Role.SUPERADMIN)
-  @ApiOkResponse({type:()=> UserEntity})
+  @ApiOkResponse({ type: () => UserEntity })
   async updateUserRole(
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateUserRoleDto,
-    @CurrentUser() user
   ) {
-    const updatedUser =new UserEntity( await this.usersService.updateUserRole(id, dto.role));
+    const updatedUser = new UserEntity(
+      await this.usersService.updateUserRole(id, dto.role),
+    );
     return {
       message:
         dto.role === Role.SUPERADMIN

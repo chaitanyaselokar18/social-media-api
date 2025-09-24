@@ -1,3 +1,6 @@
+import { config } from 'dotenv';
+config();
+
 import { NestFactory, Reflector } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ClassSerializerInterceptor, ValidationPipe } from '@nestjs/common';
@@ -10,12 +13,14 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
   // enable global validation
-  app.useGlobalPipes(new ValidationPipe({
-    whitelist: true,    // strips unknown properties
-    forbidNonWhitelisted: true, // throws error if extra properties sent
-    transform: true,    // transforms plain objects into DTO classes
-  }));
-  
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true, // strips unknown properties
+      forbidNonWhitelisted: true, // throws error if extra properties sent
+      transform: true, // transforms plain objects into DTO classes
+    }),
+  );
+
   //for exclude password
   app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
 
@@ -27,14 +32,15 @@ async function bootstrap() {
     new LoggingInterceptor(),
     new TransformInterceptor(),
   );
-  
+
   //swagger
   const config = new DocumentBuilder()
     .setTitle('Social Media API')
     .setDescription('The social media API description')
     .setVersion('1.0')
     .addTag('API')
-    .addBearerAuth( // Add Bearer token authorization
+    .addBearerAuth(
+      // Add Bearer token authorization
       {
         type: 'http',
         scheme: 'bearer',
@@ -43,13 +49,12 @@ async function bootstrap() {
         description: 'Enter JWT token',
         in: 'header',
       },
-      'access-token' // This is a unique name for the security scheme
+      'access-token', // This is a unique name for the security scheme
     )
     .build();
-    
+
   const documentFactory = () => SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, documentFactory);
-
 
   // Bind to 0.0.0.0 (important for Docker)
   const port = process.env.PORT || 3000;
