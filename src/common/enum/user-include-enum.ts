@@ -1,4 +1,4 @@
-export enum USER_INC{
-    posts= "posts",
-    blog= "blog"
+export enum USER_INC {
+    posts = "posts",
+    blog = "blog"
 }

@@ -39,7 +39,7 @@ export class BlogController {
       @Get()
       @ApiQuery({name:'page',required:false,type:Number,description:"Enter page number",example:"1"})  
       @ApiOperation({ summary: 'get all blog' })
-      @ApiOkResponse({type:()=>BlogEntity})
+      @ApiOkResponse({type:()=>BlogEntity, isArray:true})
       async getAllBlogs(
       @Query('page') page = 1,
       @Query('limit') limit = 5,

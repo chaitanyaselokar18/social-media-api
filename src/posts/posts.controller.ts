@@ -22,7 +22,7 @@ export class PostsController {
   // Create Post (any authenticated user)
   @Post()
   @ApiOperation({ summary: 'create post' })
-  @ApiOkResponse({type:()=>PostEntity})
+  @ApiOkResponse({type:()=>PostEntity, isArray:true})
   @Roles(Role.USER, Role.SUPERADMIN)
   @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
   async createPost(

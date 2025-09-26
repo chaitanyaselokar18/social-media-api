@@ -8,33 +8,33 @@ export class UsersService {
   constructor(private prisma: PrismaService) {}
 
   //include=pots,blog
-  private includeKey(includeArr: USER_INC[]): Prisma.UserInclude{
+  private includeKey(includeArr?: USER_INC[]): Prisma.UserInclude{
     return{
-      posts: includeArr.includes(USER_INC.posts),
-      blog: includeArr.includes(USER_INC.blog),
+      posts: includeArr?.includes(USER_INC.posts),
+      blog: includeArr?.includes(USER_INC.blog),
     }
   }
 
   //get All User (pagenation)
-  async getAllUsers(  page: number = 1, limit: number = 10,includeParam) {
+  async getAllUsers(  page: number = 1, limit: number = 10,include?:USER_INC[]) {
    
   if (page < 1) page = 1;
   if (limit < 1) limit = 10;
-  
+   
+
   const skip = (page - 1) * limit;
-  
   
   
 
   //  include=post,blog
-  const includeObj: Record<string, true> = {};
-  if (includeParam) {
-    includeParam.split(',').forEach((relation) => {
-      if (['posts', 'blog'].includes(relation)) {
-        includeObj[relation] = true;
-      }
-    });
-  }
+  // const includeObj: Record<string, true> = {};
+  // if (includeParam) {
+  //   includeParam.split(',').forEach((relation) => {
+  //     if (['posts', 'blog'].includes(relation)) {
+  //       includeObj[relation] = true;
+  //     }
+  //   });
+  // }
   
   //const includeParam= req.query.include as string 
   const [data,total] = await this.prisma.$transaction([
@@ -42,7 +42,9 @@ export class UsersService {
       
       skip,
       take: limit,
-      include: Object.keys(includeObj).length?includeObj:undefined,
+      include:this.includeKey(include),
+      //2nd app
+      //include: Object.keys(includeObj).length?includeObj:undefined,
       //manual include
       // include:{posts:true,
       //   blog:true

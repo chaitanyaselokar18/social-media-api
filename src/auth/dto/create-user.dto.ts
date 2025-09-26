@@ -4,7 +4,7 @@ import { IsEmail, IsString, MinLength } from 'class-validator';
 export class CreateUserDto {
   @ApiProperty({
     description:"user email",
-    example:"user@example.com"
+    example:"chaitanya@example.com"
   })
   @IsEmail()  //check email
   email: string;
